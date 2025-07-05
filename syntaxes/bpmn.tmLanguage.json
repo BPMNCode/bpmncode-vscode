@@ -1,0 +1,49 @@
+{
+  "scopeName": "source.bpmn",
+  "patterns": [
+    {
+      "name": "comment.line.double-slash.bpmn",
+      "match": "//.*$"
+    },
+    {
+      "name": "keyword.operator.arrow.bpmn",
+      "match": "->|-->|=>|\\.\\.>"
+    },
+    {
+      "name": "comment.block.bpmn",
+      "begin": "/\\*",
+      "end": "\\*/"
+    },
+    {
+      "name": "string.quoted.double.bpmn",
+      "begin": "\"",
+      "end": "\"",
+      "patterns": [
+        {
+          "name": "constant.character.escape.bpmn",
+          "match": "\\\\."
+        }
+      ]
+    },
+    {
+      "name": "keyword.control.bpmn",
+      "match": "\\b(process|subprocess|group|event|call|note|start|end|task|user|service|script|xor|and|pool|lane)\\b"
+    },
+    {
+      "name": "keyword.control.import.bpmn",
+      "match": "\\b(import|as|from)\\b"
+    },
+    {
+      "name": "entity.name.tag.bpmn",
+      "match": "\\b[A-Z][a-zA-Z0-9_]*\\b"
+    },
+    {
+      "name": "support.type.property-name.bpmn",
+      "match": "\\b[a-zA-Z_][a-zA-Z0-9_]*(?=\\s*=)"
+    },
+    {
+      "name": "string.unquoted.bpmn",
+      "match": "\\b[a-z][a-zA-Z0-9_]*\\b"
+    }
+  ]
+}

@@ -1,0 +1,17 @@
+name: Release
+on:
+  push:
+    tags: ['v*']
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-node@v3
+        with:
+          node-version: '22'
+      - run: yarn install --frozen-lockfile
+      - run: yarn compile
+      - run: npx vsce package
+      - run: npx vsce publish -p ${{ secrets.VSCE_PAT }}

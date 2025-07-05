@@ -1,0 +1,76 @@
+{
+  "name": "bpmncode-vscode",
+  "version": "0.1.0",
+  "displayName": "BPMNCode Language Support",
+  "description": "Language support for BPMNCode DSL",
+  "main": "./out/extension.js",
+  "repository": "git@github.com:BPMNCode/bpmncode-vscode.git",
+  "author": "Theosov <theosov@tutanota.com>",
+  "license": "MIT",
+  "engines": {
+    "vscode": "^1.100.3"
+  },
+  "scripts": {
+    "vscode:prepublish": "yarn compile",
+    "compile": "tsc -p ./",
+    "package": "vsce package",
+    "publish": "vsce publish",
+    "lint": "eslint ."
+  },
+  "categories": [
+    "Programming Languages",
+    "Linters"
+  ],
+  "activationEvents": [
+    "onLanguage:bpmn"
+  ],
+  "contributes": {
+    "languages": [
+      {
+        "id": "bpmn",
+        "aliases": [
+          "BPMN",
+          "bpmn"
+        ],
+        "extensions": [
+          ".bpmn"
+        ],
+        "configuration": "./language-configuration.json"
+      }
+    ],
+    "grammars": [
+      {
+        "language": "bpmn",
+        "scopeName": "source.bpmn",
+        "path": "./syntaxes/bpmn.tmLanguage.json"
+      }
+    ],
+    "snippets": [
+      {
+        "language": "bpmn",
+        "path": "./snippets/bpmn.json"
+      }
+    ],
+    "configuration": {
+      "properties": {
+        "bpmncode.executablePath": {
+          "type": "string",
+          "default": "bpmncode",
+          "description": "Path to bpmncode executable"
+        }
+      }
+    }
+  },
+  "devDependencies": {
+    "@types/node": "^24.0.10",
+    "@types/vscode": "^1.100.3",
+    "@typescript-eslint/eslint-plugin": "^8.35.1",
+    "@typescript-eslint/parser": "^8.35.1",
+    "eslint": "^9.30.1",
+    "eslint-plugin-prettier": "^5.5.1",
+    "eslint-plugin-unused-imports": "^4.1.4",
+    "prettier": "^3.6.2",
+    "typescript": "^5.8.3",
+    "vsce": "^2.15.0"
+  }
+}
