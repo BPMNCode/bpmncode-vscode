@@ -1,5 +1,6 @@
 {
   "name": "bpmncode-vscode",
+  "publisher": "Theosov",
   "version": "0.1.0",
   "displayName": "BPMNCode Language Support",
   "description": "Language support for BPMNCode DSL",
