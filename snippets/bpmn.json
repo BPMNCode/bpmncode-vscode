@@ -1,47 +1,47 @@
 {
   "Process": {
     "prefix": "process",
-    "body": ["process \"${1:Process Name}\" {", "\t$0", "}"]
+    "body": ["process ${1:ProcessName} {", "\t$0", "}"]
   },
   "Task": {
     "prefix": "task",
-    "body": ["task \"${1:Task Name}\""]
+    "body": ["task ${1:TaskName}"]
   },
   "User Task": {
     "prefix": "user",
-    "body": ["user \"${1:User Task}\""]
+    "body": ["user ${1:UserTask}"]
   },
   "Service Task": {
     "prefix": "service", 
-    "body": ["service \"${1:Service Task}\""]
+    "body": ["service ${1:ServiceTask}"]
   },
   "Start Event": {
     "prefix": "start",
-    "body": ["start \"${1:Start}\""]
+    "body": ["start "]
   },
   "End Event": {
     "prefix": "end",
-    "body": ["end \"${1:End}\""]
+    "body": ["end "]
   },
   "Gateway XOR": {
     "prefix": "xor",
-    "body": ["xor \"${1:Decision}\""]
+    "body": ["xor ${1:Decision} {", "\t$0", "}"]
   },
   "Gateway AND": {
     "prefix": "and",
-    "body": ["and \"${1:Parallel}\""]
+    "body": ["and ${1:Parallel} {", "\t$0", "}"]
   },
   "Subprocess": {
     "prefix": "subprocess",
-    "body": ["subprocess \"${1:Subprocess}\" {", "\t$0", "}"]
+    "body": ["subprocess ${1:Subprocess} {", "\t$0", "}"]
   },
   "Pool": {
     "prefix": "pool",
-    "body": ["pool \"${1:Pool Name}\" {", "\t$0", "}"]
+    "body": ["pool ${1:PoolName} {", "\t$0", "}"]
   },
   "Lane": {
     "prefix": "lane", 
-    "body": ["lane \"${1:Lane Name}\" {", "\t$0", "}"]
+    "body": ["lane ${1:LaneName} {", "\t$0", "}"]
   },
   "Flow": {
     "prefix": "->",
