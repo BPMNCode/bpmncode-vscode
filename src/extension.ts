@@ -96,11 +96,16 @@ class BPMNDiagnosticsProvider {
   private convertToDiagnostics(report: BPMNReport): vscode.Diagnostic[] {
     return report.errors.map((error) => {
       const line = Math.max(0, error.line - 1);
-      const column = Math.max(0, error.column - 1);
+      const startColumn = Math.max(0, error.column - 1);
+
+      const length = error.end - error.start;
+      const endColumn = startColumn + length;
+
       const range = new vscode.Range(
-        new vscode.Position(line, column),
-        new vscode.Position(line, column + 10),
+        new vscode.Position(line, startColumn),
+        new vscode.Position(line, endColumn),
       );
+
       const diagnostic = new vscode.Diagnostic(
         range,
         error.message,
@@ -109,10 +114,6 @@ class BPMNDiagnosticsProvider {
 
       diagnostic.code = error.code;
       diagnostic.source = 'bpmncode';
-
-      if (error.suggestions.length > 0) {
-        diagnostic.tags = [vscode.DiagnosticTag.Unnecessary];
-      }
 
       return diagnostic;
     });
@@ -150,9 +151,26 @@ class BPMNCodeActionProvider implements vscode.CodeActionProvider {
       if (diagnostic.source === 'bpmncode') {
         const suggestions = await this.getSuggestions(diagnostic);
 
+        const line = document.lineAt(diagnostic.range.start.line);
+        const lineText = line.text;
+        const startCol = diagnostic.range.start.character;
+
+        let wordStart = startCol;
+        let wordEnd = startCol;
+
+        while (wordStart > 0 && /[a-zA-Z_]/.test(lineText[wordStart - 1])) {
+          wordStart--;
+        }
+
+        while (wordEnd < lineText.length && /[a-zA-Z_]/.test(lineText[wordEnd])) {
+          wordEnd++;
+        }
+
+        const word = lineText.substring(wordStart, wordEnd);
+
         for (const suggestion of suggestions) {
           const action = new vscode.CodeAction(
-            `Replace with '${suggestion}'`,
+            `Replace '${word}' with '${suggestion}'`,
             vscode.CodeActionKind.QuickFix,
           );
 
@@ -170,10 +188,18 @@ class BPMNCodeActionProvider implements vscode.CodeActionProvider {
 
   private async getSuggestions(diagnostic: vscode.Diagnostic): Promise<string[]> {
     const message = diagnostic.message;
-    const suggestionsMatch = message.match(/did you mean: (.+)/);
+    const didYouMeanMatch = message.match(/did you mean:?\s*['"](.*?)['"]/i);
 
-    if (suggestionsMatch) {
-      return suggestionsMatch[1].split(', ').map((s) => s.trim());
+    if (didYouMeanMatch) {
+      return [didYouMeanMatch[1]];
+    }
+
+    const multipleMatch = message.match(/did you mean:?\s*(.+)/i);
+    if (multipleMatch) {
+      return multipleMatch[1]
+        .split(/,\s*/)
+        .map((s) => s.replace(/['"()?\s]/g, ''))
+        .filter((s) => s.length > 0);
     }
 
     return [];
@@ -183,26 +209,26 @@ class BPMNCodeActionProvider implements vscode.CodeActionProvider {
 class BPMNCompletionProvider implements vscode.CompletionItemProvider {
   provideCompletionItems(): vscode.CompletionItem[] {
     const items: vscode.CompletionItem[] = [];
-    const keywords = [
-      'process',
-      'start',
-      'end',
-      'task',
-      'user',
-      'service',
-      'script',
-      'xor',
-      'and',
-      'pool',
-      'lane',
-      'group',
-      'note',
-      'subprocess',
-      'call',
-      'event',
-      'import',
-      'from',
-      'as',
+    const snippets = [
+      { prefix: 'process', body: 'process ${1:ProcessName} {\n\t$0\n}' },
+      { prefix: 'task', body: 'task ${1:TaskName}' },
+      { prefix: 'user', body: 'user ${1:UserTask}' },
+      { prefix: 'service', body: 'service ${1:ServiceTask}' },
+      { prefix: 'start', body: 'start ' },
+      { prefix: 'end', body: 'end ' },
+      { prefix: 'xor', body: 'xor ${1:Decision} {\n\t$0\n}' },
+      { prefix: 'and', body: 'and ${1:Parallel} {\n\t$0\n}' },
+      { prefix: 'subprocess', body: 'subprocess ${1:Subprocess} {\n\t$0\n}' },
+      { prefix: 'pool', body: 'pool ${1:PoolName} {\n\t$0\n}' },
+      { prefix: 'lane', body: 'lane ${1:LaneName} {\n\t$0\n}' },
+      { prefix: 'script', body: 'script ${1:ScriptTask}' },
+      { prefix: 'call', body: 'call ${1:CallActivity}' },
+      { prefix: 'event', body: 'event ${1:EventName}' },
+      { prefix: 'group', body: 'group ${1:GroupName} {\n\t$0\n}' },
+      { prefix: 'note', body: 'note "${1:annotation}"' },
+      { prefix: 'import', body: 'import ' },
+      { prefix: 'from', body: 'from ' },
+      { prefix: 'as', body: 'as ' },
     ];
     const flowOperators = [
       { op: '->', desc: 'Sequence flow' },
@@ -222,11 +248,14 @@ class BPMNCompletionProvider implements vscode.CompletionItemProvider {
       'collapsed',
     ];
 
-    keywords.forEach((keyword) => {
-      const item = new vscode.CompletionItem(keyword, vscode.CompletionItemKind.Keyword);
-
-      item.documentation = new vscode.MarkdownString(`BPMN keyword: \`${keyword}\``);
-
+    snippets.forEach((snippet) => {
+      const item = new vscode.CompletionItem(
+        snippet.prefix,
+        vscode.CompletionItemKind.Snippet,
+      );
+      item.insertText = new vscode.SnippetString(snippet.body);
+      item.filterText = snippet.prefix;
+      item.sortText = snippet.prefix;
       items.push(item);
     });
 
@@ -313,12 +342,44 @@ export function activate(context: vscode.ExtensionContext) {
     vscode.workspace.onDidSaveTextDocument((doc) =>
       diagnosticsProvider.provideDiagnostics(doc),
     ),
-    vscode.workspace.onDidChangeTextDocument((e) => {
-      setTimeout(() => diagnosticsProvider.provideDiagnostics(e.document), 1000);
-    }),
+    vscode.workspace.onDidChangeTextDocument((e) =>
+      diagnosticsProvider.provideDiagnostics(e.document),
+    ),
 
     vscode.languages.registerCodeActionsProvider('bpmn', codeActionProvider),
-    vscode.languages.registerCompletionItemProvider('bpmn', completionProvider),
+    vscode.languages.registerCompletionItemProvider(
+      'bpmn',
+      completionProvider,
+      ' ',
+      '\t',
+      '\n', // Пробел, таб, новая строка
+      'a',
+      'b',
+      'c',
+      'd',
+      'e',
+      'f',
+      'g',
+      'h',
+      'i',
+      'j',
+      'k',
+      'l',
+      'm',
+      'n',
+      'o',
+      'p',
+      'q',
+      'r',
+      's',
+      't',
+      'u',
+      'v',
+      'w',
+      'x',
+      'y',
+      'z',
+    ),
     vscode.languages.registerHoverProvider('bpmn', hoverProvider),
     vscode.languages.registerDefinitionProvider({ language: 'bpmn' }, definitionProvider),
 

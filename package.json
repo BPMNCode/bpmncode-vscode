@@ -1,7 +1,7 @@
 {
   "name": "bpmncode-vscode",
   "publisher": "Theosov",
-  "version": "0.1.3",
+  "version": "0.1.4",
   "displayName": "BPMNCode DSL",
   "description": "Language support for BPMNCode DSL",
   "main": "./out/extension.js",
@@ -23,9 +23,22 @@
     "Linters"
   ],
   "activationEvents": [
-    "onLanguage:bpmn"
+    
   ],
   "contributes": {
+    "configurationDefaults": {
+        "[bpmn]": {
+            "editor.wordBasedSuggestions": "off",
+            "editor.quickSuggestions": {
+                "other": true,
+                "comments": false,
+                "strings": false
+            },
+            "editor.suggest.showKeywords": true,
+            "editor.suggest.showSnippets": true,
+            "editor.suggest.snippetsPreventQuickSuggestions": false
+        }
+    },
     "languages": [
       {
         "id": "bpmn",

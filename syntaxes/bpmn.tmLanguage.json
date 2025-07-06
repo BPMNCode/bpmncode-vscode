@@ -7,7 +7,7 @@
     },
     {
       "name": "keyword.operator.arrow.bpmn",
-      "match": "->|-->|=>|\\.\\.>"
+      "match": "\\b(->|-->|=>|\\.\\.>)\\b"
     },
     {
       "name": "comment.block.bpmn",
